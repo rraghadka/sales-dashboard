@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+body {
+
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  margin: 0;
+  padding: 30px;
+  text-align: center;
+  transition: 0.3s;
+  color: white;
+}
+
+    body.dark {
+      background-color: #1e1e1e;
+      color: white;
+    }
+
+   h1 {
+  margin-bottom: 30px;
+  font-size: 60px;
+  letter-spacing: 2px;
+}
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-bottom: 25px;
+      align-items: center;
+    }
+
+    select, input, button {
+  padding: 10px 14px;
+  font-size: 16px;
+  border-radius: 10px;
+  border: none;
+}
+
+  button {
+  cursor: pointer;
+  background: linear-gradient(45deg, #ff7e5f, #feb47b);
+  border: none;
+  color: white;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+
+    .cards-container {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 30px;
+    }
+
+    .card {
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+  padding: 22px 28px;
+  border-radius: 18px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  font-size: 20px;
+  min-width: 230px;
+  transition: 0.3s;
+  color: white;
+}
+
+    .card:hover {
+  transform: scale(1.05) translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+}
+
+    body.dark .card,
+    body.dark .chart-box,
+    body.dark #insight {
+  margin: 20px auto;
+  max-width: 800px;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  color: white;
+}
+
+    .highlight-card {
+  background: #fff8e1;
+  border: 2px solid #f2c94c;
+  color: #333;
+}
+    body.dark {
+  background: linear-gradient(135deg, #0f0f0f, #1f1f1f);
+  color: white;
+}
+
+    .charts-container {
+      display: flex;
+      justify-content: center;
+      gap: 25px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+.chart-box {
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+  padding: 20px;
+  border-radius: 18px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  width: 700px;
+  max-width: 100%;
+  transition: 0.3s;
+  color: white;
+}
+
+    .chart-box.small {
+      width: 420px;
+    }
+
+    canvas {
+      max-width: 100%;
+    }
+
+    h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
+    }
+
+    #insight {
+  margin: 20px auto;
+  max-width: 800px;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  color: white;
+}
+    #noDataMessage {
+      display: none;
+      color: red;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+    #loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #1e1e1e;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  z-index: 9999;
+}
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 6px solid rgba(255,255,255,0.2);
+  border-top: 6px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.fade-in {
+  opacity: 0;
+  transform: translateY(40px);
+  animation: fadeIn 5.8s ease forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+  </style>
+</head>
+<body>
+<div id="loader">
+  <div class="spinner"></div>
+</div>
+  <h1>Sales Dashboard</h1>
+
+  <div class="controls">
+    <label for="cityFilter"><strong>City:</strong></label>
+    <select id="cityFilter">
+      <option value="All">All Cities</option>
+    </select>
+
+    <label for="branchFilter"><strong>Branch:</strong></label>
+    <select id="branchFilter">
+      <option value="All">All Branches</option>
+    </select>
+
+    <input type="text" id="searchInput" placeholder="Search product line...">
+
+    <button id="darkModeBtn">Toggle Dark Mode</button>
+  </div>
+
+  <div class="cards-container fade-in">
+    <div class="card">
+      Total Revenue: <span id="revenue">0</span>
+    </div>
+
+    <div class="card">
+      Total Orders: <span id="orders">0</span>
+    </div>
+
+    <div class="card">
+      Average Order Value: <span id="avgOrder">0</span>
+    </div>
+
+    <div class="card highlight-card">
+      Top Product Line: <span id="topProduct">-</span>
+    </div>
+
+    <div class="card highlight-card">
+      Best City: <span id="bestCity">-</span>
+    </div>
+  </div>
+
+  <div id="insight" class="fade-in">
+    Insight will appear here
+  </div>
+
+  <div id="noDataMessage">
+    No data found for selected filters
+  </div>
+
+  <div class="charts-container fade-in">
+    <div class="chart-box">
+      <h3>Sales by Product Line</h3>
+      <canvas id="barChart"></canvas>
+    </div>
+
+    <div class="chart-box small">
+      <h3>Sales Distribution</h3>
+      <canvas id="pieChart"></canvas>
+    </div>
+
+    <div class="chart-box">
+      <h3>Sales Over Time</h3>
+      <canvas id="lineChart"></canvas>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
